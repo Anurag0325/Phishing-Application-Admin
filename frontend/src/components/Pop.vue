@@ -117,7 +117,7 @@ export default {
         async fetchData(colleagueId) {
     console.log('Fetching data for colleague ID:', colleagueId); // Check what ID is being sent
     try {
-        const response = await fetch(`http://127.0.0.1:5000/phishing_opened/${colleagueId}`);
+        const response = await fetch(`https://phishing-application-admin.onrender.com/phishing_opened/${colleagueId}`);
         const data = await response.json();
         console.log('Response data:', data); // Log the response data
         if (data.showPopup) {
@@ -166,7 +166,7 @@ export default {
         },
         async fetchQuestions() {
             try {
-                const response = await fetch(`http://127.0.0.1:5000/questions`);
+                const response = await fetch(`https://phishing-application-admin.onrender.com/questions`);
                 const data = await response.json();
                 this.questions = data;
                 this.answers = Array(data.length).fill(null);
@@ -178,7 +178,7 @@ export default {
         async submitAnswers() {
             const colleagueId = this.$route.params.colleague_id;
             try {
-                const response = await fetch(`http://127.0.0.1:5000/submit_answers/${colleagueId}`, {
+                const response = await fetch(`https://phishing-application-admin.onrender.com/submit_answers/${colleagueId}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

@@ -150,7 +150,7 @@ export default {
     methods: {
 
         logout() {
-            fetch('http://127.0.0.1:5000/logout', {
+            fetch('https://phishing-application-admin.onrender.com/logout', {
                 method: 'POST',
                 headers: {
                 'Content-Type': 'application/json',
@@ -174,7 +174,7 @@ export default {
             }
 
             try {
-                const response = await fetch('http://127.0.0.1:5000/send_email', {
+                const response = await fetch('https://phishing-application-admin.onrender.com/send_email', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -197,7 +197,7 @@ export default {
 
         async fetchReports() {
             try {
-                const response = await fetch('http://127.0.0.1:5000/reports');
+                const response = await fetch('https://phishing-application-admin.onrender.com/reports');
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
@@ -210,7 +210,7 @@ export default {
 
         async fetchQuestions() {
             try {
-                const response = await fetch('http://127.0.0.1:5000/questions');
+                const response = await fetch('https://phishing-application-admin.onrender.com/questions');
                 const data = await response.json();
                 this.questions = data;
             } catch (error) {
@@ -220,7 +220,7 @@ export default {
 
         async fetchColleagues() {
             try {
-                const response = await fetch('http://127.0.0.1:5000/users');
+                const response = await fetch('https://phishing-application-admin.onrender.com/users');
                 const data = await response.json();
                 this.colleagues = data;
             } catch (error) {
@@ -260,7 +260,7 @@ export default {
         },
 
         async downloadReport() {
-            const response = await fetch('http://127.0.0.1:5000/generate_reports');
+            const response = await fetch('https://phishing-application-admin.onrender.com/generate_reports');
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -274,7 +274,7 @@ export default {
 
         async downloadPDF(colleagueId) {
             try {
-                const response = await fetch(`http://127.0.0.1:5000/download_report/${colleagueId}`);
+                const response = await fetch(`https://phishing-application-admin.onrender.com/download_report/${colleagueId}`);
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -295,7 +295,7 @@ export default {
             this.stopPolling();
 
             try {
-                const response = await fetch(`http://127.0.0.1:5000/generate_emailed_candidates_report`, {
+                const response = await fetch(`https://phishing-application-admin.onrender.com/generate_emailed_candidates_report`, {
                     method: 'GET'
                 });
 
@@ -335,7 +335,7 @@ export default {
             formData.append('file', this.file);
 
             try {
-                const response = await fetch('http://127.0.0.1:5000/upload_colleagues_data', {
+                const response = await fetch('https://phishing-application-admin.onrender.com/upload_colleagues_data', {
                 method: 'POST',
                 body: formData,
                 });
@@ -387,7 +387,7 @@ export default {
 
         async fetchQuestions() {
             try {
-                const response = await fetch('http://127.0.0.1:5000/questions');
+                const response = await fetch('https://phishing-application-admin.onrender.com/questions');
                 const data = await response.json();
                 this.questions = data;
             } catch (error) {
@@ -396,7 +396,7 @@ export default {
         },
 
         async addQuestion() {
-            const response = await fetch('http://127.0.0.1:5000/questions', {
+            const response = await fetch('https://phishing-application-admin.onrender.com/questions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -426,7 +426,7 @@ export default {
                 return;
             }
 
-            const response = await fetch(`http://127.0.0.1:5000/questions/${this.currentQuestionId}`, {
+            const response = await fetch(`https://phishing-application-admin.onrender.com/questions/${this.currentQuestionId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -462,7 +462,7 @@ export default {
         },
 
         async deleteQuestion(id) {
-            await fetch(`http://127.0.0.1:5000/questions/${id}`, {
+            await fetch(`https://phishing-application-admin.onrender.com/questions/${id}`, {
                 method: 'DELETE'
             });
             this.fetchQuestions();
