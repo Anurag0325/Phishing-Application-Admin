@@ -73,7 +73,7 @@ def insert_dummy_data():
             db.session.add(question)
 
     users_data = [
-        {"email": "tech@kvqaindia.com",
+        {"email": "anurag@gmail.com",
             "username": "tech@kvqaindia", "password": "asdfgh"}
     ]
 
