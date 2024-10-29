@@ -1,5 +1,5 @@
 import csv
-from flask import Flask, jsonify, request, send_file
+from flask import Flask, jsonify, request, send_file, abort
 from models import *
 from flask_cors import CORS
 import os
@@ -8,6 +8,8 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.pdfgen import canvas
 from io import BytesIO
 from oauth2client.service_account import ServiceAccountCredentials
@@ -181,17 +183,38 @@ def send_email():
         return jsonify({'error': 'No department selected'}), 400
 
     templates_dir = os.path.join(os.path.dirname(__file__), 'templates')
+    signature_image_path = ''
 
-    if selected_department == 'HR':
+    if selected_department == 'HR, Information Security, Training and TMG':
         with open(os.path.join(templates_dir, 'hr_email_template.html')) as f:
             email_template = f.read()
         action_name = "Update Payroll Information"
         email_subject = "Important: Update Your Payroll Information for Q4"
-    elif selected_department == 'Accounts':
+        signature_image_path = os.path.join('templates', 'hr_signature.jpeg')
+
+    elif selected_department == 'Sales and Marketing, Finance, Admin':
         with open(os.path.join(templates_dir, 'accounts_email_template.html')) as f:
             email_template = f.read()
         action_name = "Update Credentials"
         email_subject = "Reminder: Update Your Credentials for Compliance"
+        signature_image_path = os.path.join(
+            'templates', 'sales_signature.jpeg')
+
+    elif selected_department == 'Developer and Product Development':
+        with open(os.path.join(templates_dir, 'developer_template.html')) as f:
+            email_template = f.read()
+            action_name = "Download Security Patch"
+            email_subject = "Immediate Action Required: Security Patch Deployment for Development Tools"
+            signature_image_path = os.path.join(
+                'templates', 'product_development_signature.jpeg')
+
+    elif selected_department == 'Leadership':
+        with open(os.path.join(templates_dir, 'leadership_template.html')) as f:
+            email_template = f.read()
+            action_name = "Review Strategic Plan"
+            email_subject = "Urgent: Strategic Plan Review for Q4 - Action Required"
+            signature_image_path = os.path.join(
+                'templates', 'leadership_signature.jpeg')
     # else:
     #     with open(os.path.join(templates_dir, 'email_template.html')) as f:
     #         email_template = f.read()
@@ -203,57 +226,110 @@ def send_email():
     from_email = "akanuragkumar4@gmail.com"
     password = "ibairoljmhkjmqah"
 
-    for colleague in colleagues:
-        # tracking_link = f"https://phishing-mail-application.onrender.com/phishing_test/{colleague.id}"
-        # tracking_link = f"https://phishing-mail-frontend.vercel.app/phishing_test/{colleague.id}"
-        tracking_link = f"http://localhost:8080/phishing_test/{colleague.id}"
+    # for colleague in colleagues:
+    #     # tracking_link = f"https://phishing-mail-application.onrender.com/phishing_test/{colleague.id}"
+    #     # tracking_link = f"https://phishing-mail-frontend.vercel.app/phishing_test/{colleague.id}"
+    #     tracking_link = f"http://localhost:8080/phishing_test/{colleague.id}"
 
-        print(f"Generated tracking link for {colleague.name}: {tracking_link}")
+    #     print(f"Generated tracking link for {colleague.name}: {tracking_link}")
 
-        to_email = colleague.email
-        msg = MIMEMultipart('related')
-        msg['Subject'] = email_subject
-        msg['From'] = from_email
-        msg['To'] = to_email
+    #     to_email = colleague.email
+    #     msg = MIMEMultipart('related')
+    #     msg['Subject'] = email_subject
+    #     msg['From'] = from_email
+    #     msg['To'] = to_email
 
-        body = email_template.replace("{{recipient_name}}", colleague.name)
-        body = body.replace("{{action_link}}", tracking_link)
-        body = body.replace("{{action_name}}", action_name)
-        body = body.replace("{{email_subject}}", email_subject)
+    #     body = email_template.replace("{{recipient_name}}", colleague.name)
+    #     body = body.replace("{{action_link}}", tracking_link)
+    #     body = body.replace("{{action_name}}", action_name)
+    #     body = body.replace("{{email_subject}}", email_subject)
 
-        html_content = f"""
-        <html>
-            <body>
-                {body}
-                <p>Best regards,</p>
-                <img src="cid:signature_image" alt="Company Signature" />
-            </body>
-        </html>
-        """
-        msg.attach(MIMEText(html_content, 'html'))
+    #     html_content = f"""
+    #     <html>
+    #         <body>
+    #             {body}
+    #             <img src="cid:signature_image" alt="Company Signature" />
+    #         </body>
+    #     </html>
+    #     """
+    #     msg.attach(MIMEText(html_content, 'html'))
 
-        signature_image_path = os.path.join('templates', 'Capture.JPG')
-        with open(signature_image_path, 'rb') as img_file:
-            img = MIMEImage(img_file.read())
-            img.add_header('Content-ID', '<signature_image>')
-            msg.attach(img)
+    #     # signature_image_path = os.path.join('templates', 'Capture.JPG')
+    #     with open(signature_image_path, 'rb') as img_file:
+    #         img = MIMEImage(img_file.read())
+    #         img.add_header('Content-ID', '<signature_image>')
+    #         msg.attach(img)
 
-        try:
-            with smtplib.SMTP('smtp.gmail.com', 587) as server:
-                server.starttls()
-                server.login(from_email, password)
-                server.send_message(msg)
-            print(f"Email sent to {colleague.email}")
+    #     try:
+    #         with smtplib.SMTP('smtp.gmail.com', 587) as server:
+    #             server.starttls()
+    #             server.login(from_email, password)
+    #             server.send_message(msg)
+    #         print(f"Email sent to {colleague.email}")
 
-            emailed_candidates.append({
-                'name': colleague.name,
-                'email': colleague.email,
-                'designation': colleague.designation
-            })
-            print("Emailed candidates list after sending:", emailed_candidates)
+    #         emailed_candidates.append({
+    #             'name': colleague.name,
+    #             'email': colleague.email,
+    #             'designation': colleague.designation
+    #         })
+    #         print("Emailed candidates list after sending:", emailed_candidates)
 
-        except Exception as e:
-            print(f"Failed to send email to {colleague.email}: {str(e)}")
+    #     except Exception as e:
+    #         print(f"Failed to send email to {colleague.email}: {str(e)}")
+
+    # return jsonify({'message': 'Phishing emails sent to colleagues.'})
+
+    # Batch size for email sending
+    batch_size = 50
+    for i in range(0, len(colleagues), batch_size):
+        # Create a batch of up to 50 colleagues
+        batch = colleagues[i:i + batch_size]
+        for colleague in batch:
+            tracking_link = f"http://localhost:8080/phishing_test/{colleague.id}"
+            to_email = colleague.email
+            msg = MIMEMultipart('related')
+            msg['Subject'] = email_subject
+            msg['From'] = from_email
+            msg['To'] = to_email
+
+            body = email_template.replace("{{recipient_name}}", colleague.name)
+            body = body.replace("{{action_link}}", tracking_link)
+            body = body.replace("{{action_name}}", action_name)
+            body = body.replace("{{email_subject}}", email_subject)
+
+            html_content = f"""
+            <html>
+                <body>
+                    {body}
+                    <img src="cid:signature_image" alt="Company Signature" />
+                </body>
+            </html>
+            """
+            msg.attach(MIMEText(html_content, 'html'))
+
+            # Attach the signature image
+            with open(signature_image_path, 'rb') as img_file:
+                img = MIMEImage(img_file.read())
+                img.add_header('Content-ID', '<signature_image>')
+                msg.attach(img)
+
+            # Send the email
+            try:
+                with smtplib.SMTP('smtp.gmail.com', 587) as server:
+                    server.starttls()
+                    server.login(from_email, password)
+                    server.send_message(msg)
+                print(f"Email sent to {colleague.email}")
+
+                emailed_candidates.append({
+                    'name': colleague.name,
+                    'email': colleague.email,
+                    'designation': colleague.designation
+                })
+                print("Emailed candidates list after sending:", emailed_candidates)
+
+            except Exception as e:
+                print(f"Failed to send email to {colleague.email}: {str(e)}")
 
     return jsonify({'message': 'Phishing emails sent to colleagues.'})
 
@@ -409,6 +485,7 @@ def generate_reports():
                 'Clicked': report.clicked,
                 'Answered': report.answered,
                 'Score': report.score,
+                'Attempted': 'Yes' if attempted else 'No'
             }
             report_data.append(report_entry)
 
@@ -577,6 +654,76 @@ def delete_question(question_id):
     db.session.delete(question)
     db.session.commit()
     return jsonify({'message': 'Question deleted!'})
+
+
+@app.route('/download_certificate/<int:colleague_id>')
+def download_certificate(colleague_id):
+    # Fetch the colleague from the database
+    colleague = Colleagues.query.get(colleague_id)
+    if not colleague:
+        return abort(404)  # Return 404 if the colleague is not found
+
+    # Fetch the report for the colleague to get the score
+    report = Reports.query.filter_by(colleague_id=colleague_id).first()
+    if not report:
+        return abort(404)  # Return 404 if there is no report for the colleague
+
+    score = report.score  # Fetch the score from the report
+
+    # Construct the PDF file path
+    pdf_path = f"certificate_{colleague.name.replace(' ', '_')}.pdf"
+
+    # Check if the directory exists, if not, create it
+    if not os.path.exists('certificates'):
+        os.makedirs('certificates')  # Create the directory if it doesn't exist
+
+    # Check if the PDF file exists; if not, generate it
+    if not os.path.exists(pdf_path):
+        generate_certificate(colleague.name, score)  # Generate the certificate
+
+    # Check again if the PDF was created successfully
+    if not os.path.exists(pdf_path):
+        return abort(404)  # Return 404 if the file is not found
+
+    return send_file(pdf_path, as_attachment=True)
+
+
+def generate_certificate(candidate_name, score):
+    # Replace spaces with underscores in the filename
+    candidate_name_safe = candidate_name.replace(" ", "_")
+    pdf_file_path = f"certificate_{candidate_name_safe}.pdf"
+
+    document = SimpleDocTemplate(pdf_file_path, pagesize=letter)
+    styles = getSampleStyleSheet()
+
+    # Create a list to hold the content of the PDF
+    content = []
+
+    # Title
+    title = Paragraph("Certificate of Completion", styles['Title'])
+    content.append(title)
+    content.append(Spacer(1, 20))
+
+    # Candidate Name
+    name = Paragraph(
+        f"This certifies that <b>{candidate_name}</b>", styles['Normal'])
+    content.append(name)
+    content.append(Spacer(1, 20))
+
+    # Score
+    score_paragraph = Paragraph(
+        f"Has successfully completed the quiz with a score of <b>{score}%</b>.", styles['Normal'])
+    content.append(score_paragraph)
+    content.append(Spacer(1, 20))
+
+    # Footer
+    footer = Paragraph("Thank you for your participation!", styles['Normal'])
+    content.append(footer)
+
+    # Build the PDF
+    document.build(content)
+    # Debug logging to confirm PDF creation
+    print(f"Generated PDF at: {pdf_file_path}")
 
 
 if __name__ == "__main__":

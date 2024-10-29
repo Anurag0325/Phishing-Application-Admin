@@ -1,10 +1,11 @@
 <template>
-    <div v-if="showPopup" class="popup">
+    <div class="ios-container">
+        <div v-if="showPopup" class="popup">
         <div class="popup-content">
             <!-- Phishing alert content -->
 
             <div v-if="!showStudyMaterial && !showQuestions && !showCloseButton" class="alert-popup">
-                <h2 class="popup-title">Alert: Phishing Attempt Detected!</h2>
+                <!-- <h2 class="popup-title">Alert: Phishing Attempt Detected!</h2>
                 <p class="warning-text blinking">
                     You've clicked on a link from a suspicious email, which could have led to a phishing attack. Cybercriminals use such tricks to steal sensitive information like your passwords, financial details, or personal data.
                 </p>
@@ -14,11 +15,18 @@
                 <p class="warning-text blinking">
                     Please attend the tutorial to enhance your awareness and protect yourself from future threats.
                 </p>
-                <button class="button-primary" @click="startTutorial">Attend Tutorial</button>
+                <button class="button-primary" @click="startTutorial">Attend Tutorial</button> -->
+                <h1>You Have Been Phished!</h1>
+                <img src="\RIA_logo.jpeg" alt="Company Logo" class="ria-logo">
+                <div class="warning-text blinking">
+                    <p>This was a Phishing Simulation exercise conducted by RIA Advisory under the guidance of RIA CISO Salman Ansari. You shouldn't have clicked on the link. You can see that this email was generated from outside. The email is from a different domain than RIA Advisory. You should be cautious before clicking any unknown link that is from outside and enticing you to click on some link.</p>
+                </div>
+                <p class="warning">As you clicked on the link, it is mandatory for you to complete the RIA Phishing training. Click the link below to complete the training.</p>
+                <button class="button-primary" @click="startTutorial">RIA Phishing Training Link</button>   
             </div>
 
-
-            <!-- Study Material Section -->
+            <transition name="slide">
+                <!-- Study Material Section -->
             <div v-if="showStudyMaterial && !showQuestions" ref="studyMaterialSection">
                 <h2 class="popup-title">Study Material</h2>
 
@@ -53,7 +61,9 @@
                     Start Quiz
                 </button>
             </div>
-
+            </transition>
+            
+            <transition>
             <!-- Quiz Section -->
             <div v-if="showQuestions" class="questions-container">
                 <h2 class="popup-title">Quiz: Phishing Awareness</h2>
@@ -72,6 +82,28 @@
                 </div>
                 <button class="button-primary" @click="submitAnswers">Submit Answers</button>
             </div>
+            </transition>
+            
+
+            <div v-if="showScoreSection" class="score-container">
+                <h3 class="score-text">You scored {{ score }}%.</h3>
+
+                <button
+                    v-if="score >= 70"
+                    class="button-primary"
+                    @click="downloadPDF(colleague_id)">
+                    Download Certificate
+                </button>
+
+                <button
+                    v-else
+                    class="button-secondary"
+                    @click="redoQuiz">
+                    Redo Quiz
+                </button>
+
+                <!-- <button class="button-secondary" @click="gotoclose">Next</button> -->
+            </div>
 
             <div v-if="showCloseButton">
                 <p>Thank you for participating in the data phishing awareness program. Soon you will get your result.</p>
@@ -79,10 +111,19 @@
             </div>
         </div>
     </div>
+    </div>
+    
 </template>
 
 <script>
 export default {
+    props: {
+       colleague_id: {
+           type: String,
+           required: true,
+       },
+   },
+
     data() {
         return {
             showPopup: false,
@@ -92,12 +133,20 @@ export default {
             questions: [],
             answers: [],
             isPresentationCompleted: false,
+            score: 0,
+            showScoreSection: false,
+            colleague_id: null,
         };
     },
     created() {
         const colleagueId = this.$route.params.colleague_id;
         this.fetchData(colleagueId);
     },
+
+    mounted() {
+        this.colleague_id = this.$route.params.colleague_id;
+    },
+
     methods: {
         // async fetchData(colleagueId) {
         //     try {
@@ -115,20 +164,20 @@ export default {
 
 
         async fetchData(colleagueId) {
-    console.log('Fetching data for colleague ID:', colleagueId); // Check what ID is being sent
-    try {
-        const response = await fetch(`https://phishing-application-admin.onrender.com/phishing_opened/${colleagueId}`);
-        const data = await response.json();
-        console.log('Response data:', data); // Log the response data
-        if (data.showPopup) {
-            this.showPopup = true;
-        } else {
-            this.showPopup = false;
-        }
-    } catch (error) {
-        console.error('Error fetching data:', error);
-    }
-},
+            console.log('Fetching data for colleague ID:', colleagueId); // Check what ID is being sent
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/phishing_opened/${colleagueId}`);
+                const data = await response.json();
+                console.log('Response data:', data); // Log the response data
+                if (data.showPopup) {
+                    this.showPopup = true;
+                } else {
+                    this.showPopup = false;
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        },
 
         startTutorial() {
             this.showStudyMaterial = true;
@@ -159,14 +208,14 @@ export default {
             }
         },
         trackPresentationCompletion() {
-            const presentationDuration = 30000;
+            const presentationDuration = 3000;
             setTimeout(() => {
                 this.isPresentationCompleted = true;
             }, presentationDuration);
         },
         async fetchQuestions() {
             try {
-                const response = await fetch(`https://phishing-application-admin.onrender.com/questions`);
+                const response = await fetch(`http://127.0.0.1:5000/questions`);
                 const data = await response.json();
                 this.questions = data;
                 this.answers = Array(data.length).fill(null);
@@ -175,10 +224,31 @@ export default {
                 console.error('Error fetching questions:', error);
             }
         },
+        // async submitAnswers() {
+        //     const colleagueId = this.$route.params.colleague_id;
+        //     try {
+        //         const response = await fetch(`http://127.0.0.1:5000/submit_answers/${colleagueId}`, {
+        //             method: 'POST',
+        //             headers: {
+        //                 'Content-Type': 'application/json',
+        //             },
+        //             body: JSON.stringify({ answers: this.answers }),
+        //         });
+        //         const result = await response.json();
+        //         if (result.message) {
+        //             this.showQuestions = false;
+        //             this.showStudyMaterial = false;
+        //             this.showCloseButton = true;
+        //         }
+        //     } catch (error) {
+        //         console.error('Error submitting answers:', error);
+        //     }
+        // },
+
         async submitAnswers() {
             const colleagueId = this.$route.params.colleague_id;
             try {
-                const response = await fetch(`https://phishing-application-admin.onrender.com/submit_answers/${colleagueId}`, {
+                const response = await fetch(`http://127.0.0.1:5000/submit_answers/${colleagueId}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -187,14 +257,67 @@ export default {
                 });
                 const result = await response.json();
                 if (result.message) {
+                    console.log('Submit Answers Response:', result);
+                    this.score = result.score;
                     this.showQuestions = false;
                     this.showStudyMaterial = false;
+                    this.showScoreSection = true;
                     this.showCloseButton = true;
                 }
+                
             } catch (error) {
                 console.error('Error submitting answers:', error);
             }
         },
+
+    //     async downloadPDF() {
+    //        console.log("Current colleague_id:", this.colleague_id);
+    //        try {
+    //            const response = await fetch(`http://127.0.0.1:5000/download_report/${this.colleague_id}`);
+    //            const blob = await response.blob();
+    //            const url = window.URL.createObjectURL(blob);
+    //            const a = document.createElement('a');
+    //            a.style.display = 'none';
+    //            a.href = url;
+    //            a.download = `report_${this.colleague_id}.pdf`;
+    //            document.body.appendChild(a);
+    //            a.click();
+    //            window.URL.revokeObjectURL(url);
+    //        } catch (error) {
+    //            console.error('Failed to download PDF report:', error);
+    //        }
+    //    },
+
+        async downloadPDF(colleagueId) {
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/download_certificate/${colleagueId}`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `certificate_${this.colleague_id}.pdf`; // Dynamic filename
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Error downloading PDF:', error);
+            }
+        },
+
+        redoQuiz() {
+            this.showScoreSection = false;
+            this.showQuestions = true;
+        },
+
+        gotoclose() {
+            this.showScoreSection = false;
+            this.showCloseButton = true;
+        },
+        
         closePopup() {
             this.showPopup = false;
             window.close();
@@ -406,5 +529,118 @@ export default {
         visibility: hidden;
     }
 }
-</style>
+h1 {
+    color: #dc3545;
+    text-align: center;
+}
 
+p {
+    margin-bottom: 15px;
+} 
+
+.warning { 
+    background-color: #ffeeba;
+    border-left: 6px solid #ffc107;
+    padding: 10px;
+    margin: 20px 0;
+}
+
+.ria-logo {
+    width: 100px;
+    height: auto;
+}
+
+:root {
+    --ios-blue: #007AFF;
+    --ios-green: #34C759;
+    --ios-red: #FF3B30;
+    --ios-gray: #F2F2F7;
+    --ios-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+}
+
+.ios-container {
+    font-family: var(--ios-font);
+    color: #333;
+    background-color: var(--ios-gray);
+    padding: 20px;
+}
+
+/* .popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+} */
+
+/* .popup-content {
+    background: #fff;
+    border-radius: 16px;
+    max-width: 80%;
+    padding: 20px;
+    text-align: center;
+} */
+
+/* .popup-title {
+    font-size: 1.8em;
+    color: var(--ios-blue);
+} */
+
+.button-primary {
+    background-color: var(--ios-blue);
+    color: white;
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-size: 1em;
+    font-weight: 600;
+    margin: 10px;
+    transition: background 0.3s ease;
+}
+
+.button-primary:hover {
+    background-color: #0056b3;
+}
+
+.button-secondary {
+    background-color: #6c757d;
+    color: white;
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-size: 1em;
+}
+
+.questions-container {
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 16px;
+}
+
+.question {
+    background: var(--ios-gray);
+    border-radius: 10px;
+    padding: 15px;
+    margin: 10px 0;
+}
+
+.section-title {
+    font-size: 1.3em;
+    color: #333;
+}
+
+.slide-enter-active,
+.slide-leave-active {
+    transition: transform 0.3s ease;
+}
+.slide-enter {
+    transform: translateX(100%);
+}
+.slide-leave-to {
+    transform: translateX(-100%);
+}
+</style>

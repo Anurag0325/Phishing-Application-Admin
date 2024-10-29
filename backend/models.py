@@ -17,7 +17,6 @@ class User(db.Model):
         return check_password_hash(self.password_hash, password)
 
 
-
 class Colleagues(db.Model):
     __tablename__ = 'colleagues'
     id = db.Column(db.Integer, primary_key=True)

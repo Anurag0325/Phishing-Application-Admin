@@ -76,8 +76,10 @@
                 <label for="department">Select Department:</label>
                 <select v-model="selectedDepartment" id="department">
                     <option value="" disabled>Select a department</option>
-                    <option value="HR">HR</option>
-                    <option value="Accounts">Accounts</option>
+                    <option value="Leadership">Leadership</option>
+                    <option value="Developer and Product Development">Developer and Product Development</option>
+                    <option value="Sales and Marketing, Finance, Admin">Sales and Marketing, Finance, Admin</option>
+                    <option value="HR, Information Security, Training and TMG">HR, Information Security, Training and TMG</option>
                 </select>
 
                 <div class="upload-section">
@@ -98,11 +100,11 @@
                     <tr>
                         <th>ID</th>
                         <th>Colleague Name</th>
-                        <th>Clicked</th>
-                        <th>Answered</th>
+                        <th>Link Clicked</th>
+                        <th>Training Completed</th>
                         <th>Correct Answers</th>
                         <th>Score (out of 100)</th>
-                        <th>Download Report</th>
+                        <!-- <th>Download Report</th> -->
                     </tr>
                 </thead>
                 <tbody>
@@ -113,9 +115,9 @@
                         <td>{{ report.answered ? 'Yes' : 'No' }}</td>
                         <td>{{ calculateCorrectAnswers(report.answers) }}/{{ questions.length }}</td>
                         <td>{{ calculateScoreOutOf100(report.answers) }}%</td>
-                        <td>
+                        <!-- <td>
                             <button @click="downloadPDF(report.colleague_id)">Download PDF</button>
-                        </td>
+                        </td> -->
                     </tr>
                 </tbody>
             </table>
@@ -138,6 +140,7 @@ export default {
             showQuestionModal: false,
             selectedDepartment: '',
             isEditing: false,
+            // reportData: [],
             question: {
                 id: null,
                 question_text: '',
@@ -147,10 +150,14 @@ export default {
         };
     },
 
+    // created() {
+    //     this.fetchReportData();
+    // },
+
     methods: {
 
         logout() {
-            fetch('https://phishing-application-admin.onrender.com/logout', {
+            fetch('http://127.0.0.1:5000/logout', {
                 method: 'POST',
                 headers: {
                 'Content-Type': 'application/json',
@@ -174,7 +181,7 @@ export default {
             }
 
             try {
-                const response = await fetch('https://phishing-application-admin.onrender.com/send_email', {
+                const response = await fetch('http://127.0.0.1:5000/send_email', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -197,7 +204,7 @@ export default {
 
         async fetchReports() {
             try {
-                const response = await fetch('https://phishing-application-admin.onrender.com/reports');
+                const response = await fetch('http://127.0.0.1:5000/reports');
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
@@ -210,7 +217,7 @@ export default {
 
         async fetchQuestions() {
             try {
-                const response = await fetch('https://phishing-application-admin.onrender.com/questions');
+                const response = await fetch('http://127.0.0.1:5000/questions');
                 const data = await response.json();
                 this.questions = data;
             } catch (error) {
@@ -220,7 +227,7 @@ export default {
 
         async fetchColleagues() {
             try {
-                const response = await fetch('https://phishing-application-admin.onrender.com/users');
+                const response = await fetch('http://127.0.0.1:5000/users');
                 const data = await response.json();
                 this.colleagues = data;
             } catch (error) {
@@ -260,7 +267,7 @@ export default {
         },
 
         async downloadReport() {
-            const response = await fetch('https://phishing-application-admin.onrender.com/generate_reports');
+            const response = await fetch('http://127.0.0.1:5000/generate_reports');
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -274,7 +281,7 @@ export default {
 
         async downloadPDF(colleagueId) {
             try {
-                const response = await fetch(`https://phishing-application-admin.onrender.com/download_report/${colleagueId}`);
+                const response = await fetch(`http://127.0.0.1:5000/download_report/${colleagueId}`);
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -295,7 +302,7 @@ export default {
             this.stopPolling();
 
             try {
-                const response = await fetch(`https://phishing-application-admin.onrender.com/generate_emailed_candidates_report`, {
+                const response = await fetch(`http://127.0.0.1:5000/generate_emailed_candidates_report`, {
                     method: 'GET'
                 });
 
@@ -335,7 +342,7 @@ export default {
             formData.append('file', this.file);
 
             try {
-                const response = await fetch('https://phishing-application-admin.onrender.com/upload_colleagues_data', {
+                const response = await fetch('http://127.0.0.1:5000/upload_colleagues_data', {
                 method: 'POST',
                 body: formData,
                 });
@@ -387,7 +394,7 @@ export default {
 
         async fetchQuestions() {
             try {
-                const response = await fetch('https://phishing-application-admin.onrender.com/questions');
+                const response = await fetch('http://127.0.0.1:5000/questions');
                 const data = await response.json();
                 this.questions = data;
             } catch (error) {
@@ -396,7 +403,7 @@ export default {
         },
 
         async addQuestion() {
-            const response = await fetch('https://phishing-application-admin.onrender.com/questions', {
+            const response = await fetch('http://127.0.0.1:5000/questions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -426,7 +433,7 @@ export default {
                 return;
             }
 
-            const response = await fetch(`https://phishing-application-admin.onrender.com/questions/${this.currentQuestionId}`, {
+            const response = await fetch(`http://127.0.0.1:5000/questions/${this.currentQuestionId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -462,7 +469,7 @@ export default {
         },
 
         async deleteQuestion(id) {
-            await fetch(`https://phishing-application-admin.onrender.com/questions/${id}`, {
+            await fetch(`hhttp://127.0.0.1:5000/questions/${id}`, {
                 method: 'DELETE'
             });
             this.fetchQuestions();
@@ -501,6 +508,16 @@ export default {
         cancel() {
             this.resetQuestionForm();
         }, 
+
+    //     fetchReportData() {
+    //   // Fetch the report data from the backend API
+    //   fetch('/generate_report')
+    //     .then(response => response.json())
+    //     .then(data => {
+    //       this.reportData = data;
+    //     })
+    //     .catch(error => console.error("Error fetching report data:", error));
+    // }
     },
 
     async mounted() {
@@ -513,6 +530,8 @@ export default {
     beforeDestroy() {
         this.stopPolling();
     },
+
+    
 };
 </script>
 
