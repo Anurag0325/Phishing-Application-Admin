@@ -11,6 +11,11 @@ const routes = [
     path: '/phishing_test/:colleague_id',
     component: Pop,
   },
+  {
+    path: '/study-material/:colleague_id',
+    component: Pop,
+    props: true, // Allow passing params as props
+  },
 ]
 
 const router = createRouter({
